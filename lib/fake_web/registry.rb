@@ -38,19 +38,9 @@ module FakeWeb
     end
 
     def response_for(method, uri, &block)
-      responses = registered_uri(method, uri)
-      return nil if responses.nil?
-
-      next_response = responses.last
-      responses.each do |response|
-        if response.times and response.times > 0
-          response.times -= 1
-          next_response = response
-          break
-        end
-      end
-
-      next_response.response(&block)
+      responders = registered_uri(method, uri)
+      return nil if responders.nil?
+      pick_responder(responders).response(&block)
     end
 
     private
@@ -72,6 +62,16 @@ module FakeWeb
       else
         query.split('&').sort.join('&')
       end
+    end
+    
+    def pick_responder(responders)
+      if next_responder = responders.find { |responder| responder.times > 0 }
+        next_responder.times -= 1
+      else
+        next_responder = responders.last
+      end
+
+      next_responder
     end
 
   end

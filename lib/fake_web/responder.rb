@@ -28,6 +28,10 @@ module FakeWeb
 
       response
     end
+    
+    def verify(request)
+      options[:verify].call(request) if options[:verify]
+    end
 
     private
 

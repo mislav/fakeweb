@@ -37,9 +37,11 @@ module Net  #:nodoc: all
       uri = "#{protocol}://#{self.address}:#{self.port}#{path}"
       method = request.method.downcase.to_sym
 
-      if FakeWeb.registered_uri?(method, uri)
+      if registered = FakeWeb::Registry.instance.registered_uri(method, uri)
+        responder = FakeWeb::Registry.instance.send(:pick_responder, registered)
+        responder.verify(request)
         @socket = Net::HTTP.socket_type.new
-        FakeWeb.response_for(method, uri, &block)
+        responder.response(&block)
       elsif FakeWeb.allow_net_connect?
         original_net_http_connect
         original_net_http_request(request, body, &block)

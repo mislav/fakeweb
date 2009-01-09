@@ -106,7 +106,9 @@ module FakeWeb
   #     FakeWeb.register_uri('http://www.example.com/', :exception => Net::HTTPError)
   #
   def self.register_uri(*args)
-    Registry.instance.register_uri(*extract_arguments(args))
+    options = args.last.is_a?(Hash) || args.last.is_a?(Array) ? args.pop : {}
+    method, uri = extract_arguments(args)
+    Registry.instance.register_uri(method, uri, options)
   end
 
   # call-seq:
@@ -134,19 +136,17 @@ module FakeWeb
   private
   
   def self.extract_arguments(args)
-    args.push({}) unless args.last.is_a?(Hash) or args.last.is_a?(Array)
-    
     case args.length
-    when 2
-      uri, options = *args
+    when 1
+      uri = args.first
       method = :any
-    when 3
-      method, uri, options = *args
+    when 2
+      method, uri = *args
     else
       raise ArgumentError, "wrong number of arguments (expected the URI at least)"
     end
     
-    [method, uri, options]
+    [method, uri]
   end
 
 end

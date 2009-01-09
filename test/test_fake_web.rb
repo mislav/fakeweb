@@ -437,4 +437,17 @@ class TestFakeWeb < Test::Unit::TestCase
     3.times { assert_equal 'thrice',               Net::HTTP.get(uri) }
     4.times { assert_equal 'ever_more',            Net::HTTP.get(uri) }
   end
+  
+  def test_response_hit_calls_verify
+    verify_called = false
+    FakeWeb.register_uri('http://mock/verify_called',
+      :verify => lambda { |req|
+        assert_kind_of Net::HTTPRequest, req
+        verify_called = true
+      }
+    )
+    assert !verify_called
+    Net::HTTP.start('mock') { |http| response = http.get('/verify_called') }
+    assert verify_called
+  end
 end
