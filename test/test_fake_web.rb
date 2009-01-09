@@ -11,11 +11,14 @@ class TestFakeWeb < Test::Unit::TestCase
     FakeWeb.register_uri('http://mock/test_example.txt', :string => "example")
     assert FakeWeb.registered_uri?('http://mock/test_example.txt')
   end
-
-  def test_register_uri_with_wrong_number_of_arguments
-    assert_raises ArgumentError do
+  
+  def test_register_uri_with_a_single_argument
+    assert_nothing_raised do
       FakeWeb.register_uri("http://example.com")
     end
+  end
+
+  def test_register_uri_with_wrong_number_of_arguments
     assert_raises ArgumentError do
       FakeWeb.register_uri(:get, "http://example.com", "/example", :string => "example")
     end

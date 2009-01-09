@@ -106,14 +106,7 @@ module FakeWeb
   #     FakeWeb.register_uri('http://www.example.com/', :exception => Net::HTTPError)
   #
   def self.register_uri(*args)
-    method = :any
-    case args.length
-    when 3 then method, uri, options = *args
-    when 2 then         uri, options = *args
-    else   raise ArgumentError.new("wrong number of arguments (#{args.length} for method = :any, uri, options)")
-    end
-
-    Registry.instance.register_uri(method, uri, options)
+    Registry.instance.register_uri(*extract_arguments(args))
   end
 
   # call-seq:
@@ -122,13 +115,7 @@ module FakeWeb
   #
   # Returns the faked Net::HTTPResponse object associated with +uri+.
   def self.response_for(*args, &block) #:nodoc: :yields: response
-    method = :any
-    case args.length
-    when 2 then method, uri = *args
-    when 1 then         uri = *args
-    else   raise ArgumentError.new("wrong number of arguments (#{args.length} for method = :any, uri)")
-    end
-
+    method, uri = extract_arguments(args)
     Registry.instance.response_for(method, uri, &block)
   end
 
@@ -140,14 +127,26 @@ module FakeWeb
   # specify +method+ to limit the search to a certain HTTP method (or use
   # <tt>:any</tt> to explicitly check against any method).
   def self.registered_uri?(*args)
-    method = :any
-    case args.length
-    when 2 then method, uri = *args
-    when 1 then         uri = *args
-    else   raise ArgumentError.new("wrong number of arguments (#{args.length} for method = :any, uri)")
-    end
-
+    method, uri = extract_arguments(args)
     Registry.instance.registered_uri?(method, uri)
+  end
+  
+  private
+  
+  def self.extract_arguments(args)
+    args.push({}) unless args.last.is_a?(Hash) or args.last.is_a?(Array)
+    
+    case args.length
+    when 2
+      uri, options = *args
+      method = :any
+    when 3
+      method, uri, options = *args
+    else
+      raise ArgumentError, "wrong number of arguments (expected the URI at least)"
+    end
+    
+    [method, uri, options]
   end
 
 end
